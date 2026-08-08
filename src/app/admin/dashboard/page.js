@@ -14,26 +14,46 @@ export default function AdminDashboard() {
   });
   const [repairs, setRepairs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [authorized, setAuthorized] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    fetchAdminData();
-  }, []);
+    const checkAdminAuth = async () => {
+      try {
+        const res = await fetch('/api/admin/stats');
+        const contentType = res.headers.get('content-type');
+        
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error('Invalid response format');
+        }
 
-  const fetchAdminData = async () => {
-    try {
-      const res = await fetch('/api/admin/stats');
-      const data = await res.json();
-      if (data.success) {
-        setStats(data.stats);
-        setRepairs(data.repairs);
+        const data = await res.json();
+        
+        if (res.ok && data.success) {
+          setAuthorized(true);
+          setStats(data.stats);
+          setRepairs(data.repairs);
+        } else {
+          router.push('/');
+        }
+      } catch (err) {
+        console.error('Auth verification failed:', err);
+        router.push('/');
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error('Error fetching admin stats:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    checkAdminAuth();
+  }, [router]);
+
+  if (!authorized && loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans">
+        <p className="text-slate-600 font-medium">Verifying admin access...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex font-sans">

@@ -2,9 +2,23 @@ import dbConnect from '@/lib/mongodb';
 import RepairTask from '@/models/RepairTask';
 import User from '@/models/User';
 import { NextResponse } from 'next/server';
+// Agar aap token/session decode karne ke liye koi utility use karte hain toh use import karein
+// import { verifyAuth } from '@/lib/auth'; 
 
-export async function GET() {
+export async function GET(request) {
   try {
+    // 1. Session/Token check karein ke user authenticated aur Admin hai ya nahi
+    // (Yeh aapke auth setup par depend karta hai, yahan ek general check hai)
+    /* 
+    const user = await verifyAuth(request);
+    if (!user || user.role !== 'Admin') {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized: Admin access required' },
+        { status: 403 }
+      );
+    }
+    */
+
     await dbConnect();
 
     const customersCount = await User.countDocuments({ role: 'Customer' });
